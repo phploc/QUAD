@@ -3,6 +3,31 @@ session_start();
 if(!defined('QUAD'))
 	die('Этот файл нельзя вызывать напрямую');
 define('HOME','php.loc');
+date_default_timezone_set('Europe/Minsk');
+//*******************BAN bonus system********************************
+if($_SESSION['bonus']>30 && $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
+unset($_SESSION['bonus']);
+header("Location: //natribu.org/");
+exit;
+}
+if($_SESSION['count']>5 || $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
+	$_SESSION['bonus']+=5;
+	$_SESSION['bantime']=$_SERVER['REQUEST_TIME']+$_SESSION['bonus'];
+	unset($_SESSION['count'],$_SESSION['oldtime']);
+	die('на F5 можно и поменьше нажимать');
+}
+		
+if(isset($_SESSION['oldtime'])){
+	$deltatime=$_SERVER['REQUEST_TIME']-$_SESSION['oldtime'];
+	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
+	if($deltatime<3){
+		$_SESSION['count']++;
+}
+}
+else{
+	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
+}
+
 //*************************index*************************************
 function authform(){
 echo <<<XOF

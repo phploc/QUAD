@@ -1,9 +1,9 @@
-﻿RewriteEngine On
+﻿AddDefaultCharset UTF-8
+php_value max_execution_time 60
+RewriteEngine On
 DirectoryIndex index.php
-RewriteRule ^montyhalleng?(.*) montyhalleng.php?%(QUERY_STRING) [L]
-RewriteRule ^login?(.*) login.php?%(QUERY_STRING) [L]
-RewriteRule ^logout?(.*) logout.php?%(QUERY_STRING) [L]
-<FilesMatch "(params.php|.htaccess)$">
+RewriteRule ^(([^/]+/)*[^.]+)$ /$1.php [L]
+<FilesMatch "^(params.php|.htaccess)$">
  order allow,deny
  deny from all
  </FilesMatch>

@@ -1,4 +1,6 @@
 <?php
+define('QUAD',true);
+require_once 'params.php';
 $s=0;
 $v=0;
 $n=10000;
