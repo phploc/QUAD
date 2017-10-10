@@ -28,7 +28,7 @@ XOF;
 function login(){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='POST' )
-	die('Закрой дверь с обратной стороны');	
+	die('Закрой дверь с обратной стороны 1');	
 
 
 $user1='qw';
@@ -45,7 +45,7 @@ echo 'авторизация не пройдена';
 function logout(){
 	$host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='GET' )
-	die('Закрой дверь с обратной стороны');	
+	die('Закрой дверь с обратной стороны 2');	
 
 unset($_SESSION['count'],$_SESSION['counter'],$_SESSION['user']);
 header("Location: /");

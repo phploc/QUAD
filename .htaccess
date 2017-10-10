@@ -1,0 +1,9 @@
+﻿RewriteEngine On
+DirectoryIndex index.php
+RewriteRule ^montyhalleng?(.*) montyhalleng.php?%(QUERY_STRING) [L]
+RewriteRule ^login?(.*) login.php?%(QUERY_STRING) [L]
+RewriteRule ^logout?(.*) logout.php?%(QUERY_STRING) [L]
+<FilesMatch "(params.php|.htaccess)$">
+ order allow,deny
+ deny from all
+ </FilesMatch>
