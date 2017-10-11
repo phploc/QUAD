@@ -3,6 +3,17 @@ if(!defined('QUAD'))
 	die('eRrOr');
 define('HOME','php.loc');  //для проверки рефера
 date_default_timezone_set('Europe/Minsk');
+
+ini_set("session.name", 'servise');
+ini_set("session.cookie_lifetime", 604800);
+ini_set("session.cookie_httponly", true);
+ini_set("session.use_only_cookies", true);
+ini_set("session.cookie_httponly", true);
+ini_set("session.hash_function", 'crc32');
+ini_set("session.cookie_domain", '.php.loc');
+ini_set("session.save_path", 'F:\openserver\domains\php.loc\temp');
+ini_set("session.gc_probability", 1);
+ini_set("session.gc_divisor", 10);
 session_start();
 
 
