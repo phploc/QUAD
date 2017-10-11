@@ -3,7 +3,9 @@ php_value max_execution_time 60
 RewriteEngine On
 DirectoryIndex index.php
 RewriteRule ^(([^/]+/)*[^.]+)$ /$1.php [L]
-<FilesMatch "^(params.php|.htaccess)$">
+RewriteRule ^login(.*)$ /index.php?method=login [L]
+RewriteRule ^logout?(.*)$ /index.php?method=logout [L]
+<FilesMatch "^(params\.php|\.htaccess)$">
  order allow,deny
  deny from all
  </FilesMatch>

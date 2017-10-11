@@ -31,7 +31,7 @@ else{
 //*************************index*************************************
 function authform(){
 echo <<<XOF
-<form action="login.php" method="post">
+<form action="/login" method="post">
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
 <input type="submit" name="submit" value="Войти" />
@@ -42,8 +42,8 @@ XOF;
 function welcom(){
 	echo "Вечер в хату, ",$_SESSION['user'];
 	echo <<<XOF
-<form action="logout.php">
-<input type="submit" name="submit" value="Выход" />
+<form action="/logout">
+<input type="submit" name="logout" value="покинуть это" />
 </form>
 XOF;
  exit;
