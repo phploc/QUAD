@@ -6,6 +6,7 @@ if($_GET['method']==='login')
 	login();
 elseif($_GET['method']==='logout')
 	logout();
+	
 echo <<<XOF
 <form action="montyhalleng" method="POST">
      <input name="myActionName" type="submit" value="Посмотреть на парадокс" />
@@ -13,10 +14,10 @@ echo <<<XOF
 XOF;
 
 if(empty($_SESSION['user'])){
-	authform();
+	echo authform();
 }
 else{
-	welcom();
+	echo welcom();
 }
 
 ?>

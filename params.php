@@ -1,14 +1,16 @@
 <?php
-session_start();
 if(!defined('QUAD'))
-	die('Этот файл нельзя вызывать напрямую');
-define('HOME','php.loc');
+	die('eRrOr');
+define('HOME','php.loc');  //для проверки рефера
 date_default_timezone_set('Europe/Minsk');
+session_start();
+
+
 //*******************BAN bonus system********************************
 if($_SESSION['bonus']>30 && $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
-unset($_SESSION['bonus']);
-header("Location: //natribu.org/");
-exit;
+	unset($_SESSION['bonus']);
+	header("Location: //natribu.org/");
+	exit;
 }
 if($_SESSION['count']>5 || $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	$_SESSION['bonus']+=5;
@@ -28,25 +30,27 @@ else{
 	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
 }
 
+
 //*************************index*************************************
 function authform(){
-echo <<<XOF
+return <<<XOF
 <form action="/login" method="post">
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
 <input type="submit" name="submit" value="Войти" />
 </form>
 XOF;
- exit;	
+	
 }
 function welcom(){
-	echo "Вечер в хату, ",$_SESSION['user'];
-	echo <<<XOF
+	
+	return <<<XOF
+Вечер в хату, {$_SESSION['user']} <br>
 <form action="/logout">
 <input type="submit" name="logout" value="покинуть это" />
 </form>
 XOF;
- exit;
+
 }
 
 //*************************login*************************************
@@ -59,9 +63,10 @@ if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='POST' )
 $user1='qw';
 $pass1='7b5b40e9d2c268ddc876d026cfd08583';
 if((empty($_POST['user']) || empty($_POST['pass'])) ||
-	($_POST['user']==$user1 && md5(md5($_POST['pass']))==$pass1 && $_SESSION['user'] = $user1)){
-	header("Location: /");
-	exit;
+	($_POST['user']===$user1 && md5(md5($_POST['pass']))===$pass1)){
+		 $_SESSION['user'] = $user1;
+		header("Location: /");
+		exit;
 }
 echo 'авторизация не пройдена';
 }
