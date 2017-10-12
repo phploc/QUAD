@@ -1,6 +1,7 @@
 <?php
+
 if(!defined('QUAD'))
-	die('eRrOr');
+	err();
 define('HOME','php.loc');  //для проверки рефера
 date_default_timezone_set('Europe/Minsk');
 
@@ -10,24 +11,34 @@ ini_set("session.cookie_httponly", true);
 ini_set("session.use_only_cookies", true);
 ini_set("session.cookie_httponly", true);
 ini_set("session.hash_function", 'crc32');
-ini_set("session.cookie_domain", '.php.loc');
-ini_set("session.save_path", 'F:\openserver\domains\php.loc\temp');
+ini_set("session.cookie_domain", HOME);
+ini_set("session.save_path", "F:\openserver\domains\\".HOME."\\temp");
 ini_set("session.gc_probability", 1);
 ini_set("session.gc_divisor", 10);
 session_start();
 
 
+function head($url='/'){			//функция перенаправления
+	header("Location: ".$url);
+	exit;
+}
+
+function err($errortext='eRrOr',$bool=true){		////функция ошибки
+	if($bool===true)
+	die($errortext);
+}
+
+
 //*******************BAN bonus system********************************
 if($_SESSION['bonus']>30 && $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	unset($_SESSION['bonus']);
-	header("Location: //natribu.org/");
-	exit;
-}
+	head('//natribu.org/');
+	}
 if($_SESSION['count']>5 || $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	$_SESSION['bonus']+=5;
 	$_SESSION['bantime']=$_SERVER['REQUEST_TIME']+$_SESSION['bonus'];
 	unset($_SESSION['count'],$_SESSION['oldtime']);
-	die('на F5 можно и поменьше нажимать');
+	err();
 }
 		
 if(isset($_SESSION['oldtime'])){
@@ -75,8 +86,8 @@ XOF;
 //*************************login*************************************
 function login($mysqli){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
-if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='POST' )
-	die('Закрой дверь с обратной стороны 1');	
+if($host!=HOME || $_SERVER['REQUEST_METHOD'] != 'POST' )
+	err();	
 
 
 
@@ -86,8 +97,7 @@ if(!empty($_POST['user']) || !empty($_POST['pass'])){
 
 		if($res->num_rows>=1){
 		$_SESSION['user'] = $_POST['user'];
-		header("Location: /");
-		exit;
+		head();
 		}
 }
 echo 'авторизация не пройдена';
@@ -97,9 +107,8 @@ echo 'авторизация не пройдена';
 function logout(){
 	$host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='GET' )
-	die('Закрой дверь с обратной стороны 2');	
+	err();	
 
 unset($_SESSION['count'],$_SESSION['counter'],$_SESSION['user']);
-header("Location: /");
-exit;
+head();
 }
