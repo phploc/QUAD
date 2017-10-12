@@ -3,6 +3,7 @@
 if(!defined('QUAD'))
 	err();
 define('HOME','php.loc');  //для проверки рефера
+define('SALT','quadropus');  //для засолки
 date_default_timezone_set('Europe/Minsk');
 
 ini_set("session.name", 'servise');
@@ -23,7 +24,7 @@ function head($url='/'){			//функция перенаправления
 	exit;
 }
 
-function err($errortext='eRrOr',$bool=true){		////функция ошибки
+function err($errortext,$bool=true){		////функция ошибки
 	if($bool===true)
 	die($errortext);
 }
@@ -38,7 +39,7 @@ if($_SESSION['count']>5 || $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	$_SESSION['bonus']+=5;
 	$_SESSION['bantime']=$_SERVER['REQUEST_TIME']+$_SESSION['bonus'];
 	unset($_SESSION['count'],$_SESSION['oldtime']);
-	err();
+	err('на F5 можно и поменьше нажимать');
 }
 		
 if(isset($_SESSION['oldtime'])){
@@ -87,15 +88,14 @@ XOF;
 function login($mysqli){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] != 'POST' )
-	err();	
+	err('Закрой дверь с обратной стороны 1');	
 
 
 
 if(!empty($_POST['user']) || !empty($_POST['pass'])){
-		$salt='quadropus';
-		$_POST['user'] = $mysqli->real_escape_string($_POST['user']);
-		$_POST['pass'] = $mysqli->real_escape_string($_POST['pass']);
-		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass'].$salt))."'");
+		$authuser = $mysqli->real_escape_string($_POST['user']);
+		$authpass = $mysqli->real_escape_string($_POST['pass']);
+		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass'].SALT))."'");
 		if($res->num_rows>=1){
 		$_SESSION['user'] = $_POST['user'];
 		head();
@@ -108,7 +108,7 @@ echo 'авторизация не пройдена';
 function logout(){
 	$host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='GET' )
-	err();	
+	err('Закрой дверь с обратной стороны 2');	
 
 unset($_SESSION['count'],$_SESSION['counter'],$_SESSION['user']);
 head();
