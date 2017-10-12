@@ -41,6 +41,14 @@ else{
 	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
 }
 
+//*******************DBmysql********************************
+
+$mysqli = new mysqli('127.0.0.1', 'root', '', 'first');
+if ($mysqli->connect_error) {
+    die('Ошибка подключения (' . $mysqli->connect_errno . ') '
+            . $mysqli->connect_error);
+}
+
 
 //*************************index*************************************
 function authform(){
@@ -65,19 +73,22 @@ XOF;
 }
 
 //*************************login*************************************
-function login(){
+function login($mysqli){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='POST' )
 	die('Закрой дверь с обратной стороны 1');	
 
 
-$user1='qw';
-$pass1='7b5b40e9d2c268ddc876d026cfd08583';
-if((empty($_POST['user']) || empty($_POST['pass'])) ||
-	($_POST['user']===$user1 && md5(md5($_POST['pass']))===$pass1)){
-		 $_SESSION['user'] = $user1;
+
+if(!empty($_POST['user']) || !empty($_POST['pass'])){
+
+		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass']))."'");
+
+		if($res->num_rows>=1){
+		$_SESSION['user'] = $_POST['user'];
 		header("Location: /");
 		exit;
+		}
 }
 echo 'авторизация не пройдена';
 }

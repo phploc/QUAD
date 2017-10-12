@@ -3,7 +3,7 @@ define('QUAD',true);
 require_once 'params.php';
 
 if($_GET['method']==='login')
-	login();
+	login($mysqli);
 elseif($_GET['method']==='logout')
 	logout();
 	
