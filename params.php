@@ -92,9 +92,8 @@ if($host!=HOME || $_SERVER['REQUEST_METHOD'] != 'POST' )
 
 
 if(!empty($_POST['user']) || !empty($_POST['pass'])){
-
-		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass']))."'");
-
+		$salt='quadropus';
+		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass'].$salt))."'");
 		if($res->num_rows>=1){
 		$_SESSION['user'] = $_POST['user'];
 		head();
