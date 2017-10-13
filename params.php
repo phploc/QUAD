@@ -1,11 +1,9 @@
 <?php
-
 if(!defined('QUAD'))
 	err();
 define('HOME','php.loc');  //для проверки рефера
 define('SALT','quadropus');  //для засолки
 date_default_timezone_set('Europe/Minsk');
-
 ini_set("session.name", 'servise');
 ini_set("session.cookie_lifetime", 604800);
 ini_set("session.cookie_httponly", true);
@@ -17,19 +15,14 @@ ini_set("session.save_path", "F:\openserver\domains\\".HOME."\\temp");
 ini_set("session.gc_probability", 1);
 ini_set("session.gc_divisor", 10);
 session_start();
-
-
 function head($url='/'){			//функция перенаправления
 	header("Location: ".$url);
 	exit;
 }
-
 function err($errortext,$bool=true){		////функция ошибки
 	if($bool===true)
 	die($errortext);
 }
-
-
 //*******************BAN bonus system********************************
 if($_SESSION['bonus']>30 && $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	unset($_SESSION['bonus']);
@@ -52,16 +45,12 @@ if(isset($_SESSION['oldtime'])){
 else{
 	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
 }
-
 //*******************DBmysql********************************
-
 $mysqli = new mysqli('127.0.0.1', 'root', '', 'first');
 if ($mysqli->connect_error) {
     die('Ошибка подключения (' . $mysqli->connect_errno . ') '
             . $mysqli->connect_error);
 }
-
-
 //*************************index*************************************
 function authform(){
 return <<<XOF
@@ -81,18 +70,13 @@ function welcom(){
 <input type="submit" name="logout" value="покинуть это" />
 </form>
 XOF;
-
 }
-
 //*************************login*************************************
 function login($mysqli){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
-if($host!=HOME || $_SERVER['REQUEST_METHOD'] != 'POST' )
-	err('Закрой дверь с обратной стороны 1');	
-
-
-
-if(!empty($_POST['user']) || !empty($_POST['pass'])){
+if($host!=HOME && empty($_SESSION['user']) && $_GET['method']=='login' )
+	authform();	
+elseif(!empty($_POST['user']) || !empty($_POST['pass'])){
 		$authuser = $mysqli->real_escape_string($_POST['user']);
 		$authpass = $mysqli->real_escape_string($_POST['pass']);
 		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$_POST['user']}' AND password='".md5(md5($_POST['pass'].SALT))."'");
@@ -100,16 +84,16 @@ if(!empty($_POST['user']) || !empty($_POST['pass'])){
 		$_SESSION['user'] = $_POST['user'];
 		head();
 		}
-}
-echo 'авторизация не пройдена';
+		else
+		echo 'авторизация не пройдена';
 }
 
+}
 //*************************logout*************************************
 function logout(){
 	$host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 if($host!=HOME || $_SERVER['REQUEST_METHOD'] !='GET' )
 	err('Закрой дверь с обратной стороны 2');	
-
 unset($_SESSION['count'],$_SESSION['counter'],$_SESSION['user']);
 head();
 }
