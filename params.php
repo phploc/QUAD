@@ -4,6 +4,7 @@ if(!defined('QUAD'))
 define('HOME','php.loc');  //для проверки рефера
 define('SALT','quadropus');  //для засолки
 date_default_timezone_set('Europe/Minsk');
+
 ini_set("session.name", 'servise');
 ini_set("session.cookie_lifetime", 604800);
 ini_set("session.cookie_httponly", true);
@@ -15,14 +16,32 @@ ini_set("session.save_path", "F:\openserver\domains\\".HOME."\\temp");
 ini_set("session.gc_probability", 1);
 ini_set("session.gc_divisor", 10);
 session_start();
+
 function to_location($url='/'){			//функция перенаправления
 	header("Location: ".$url);
 	exit;
 }
+
 function err($errortext,$bool=true){		////функция ошибки
 	if($bool===true)
 	die($errortext);
 }
+
+function saling($sacred_string){
+	return md5(md5($sacred_string.SALT));
+}
+
+function crypt_hide($code='1'){				////функция шифровки/расшифровки
+	$id_sess=session_id();
+	if($code==='1'){
+	return openssl_encrypt($id_sess.time().SALT,'RC4-40','gh');
+	}
+	else{
+	$b=openssl_decrypt($code,'RC4-40','gh');
+	return str_replace(array($id_sess,SALT),'',$b);
+	}
+}
+
 //*******************BAN bonus system********************************
 if($_SESSION['bonus']>30 && $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	unset($_SESSION['bonus']);
@@ -54,11 +73,12 @@ if ($mysqli->connect_error) {
 }
 //*************************index*************************************
 function authform(){
+$CRYPT=crypt_hide();
 return <<<XOF
 <form action="/login" method="post">
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
-<input hidden type="text" name="token" value="Войти" />
+<input hidden type="text" name="crypt" value="{$CRYPT}" />
 <input type="submit" name="submit" value="Войти" />
 </form>
 XOF;
@@ -85,12 +105,14 @@ XOF;
 
 function registration(){
 if(empty($_SESSION['user']) && $_GET['method']=='register'){
+$CRYPT=crypt_hide();
 return <<<XOF
 Введите данные в форму регистрации
 <form action="/register" method="post">
 E-mail: <input required type="text" name="e-mail" /><br />
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
+<input hidden type="text" name="crypt" value="{$CRYPT}" />
 <input type="submit" name="regsubmit" value="Зарегистрироваться" />
 </form>
 XOF;
@@ -99,7 +121,8 @@ to_location();
 }
 
 function writeregister($mysqli){
-	if(!empty($_POST['user']) || !empty($_POST['pass']) || !empty($_POST['e-mail'])){
+	$time_login=crypt_hide($_POST['crypt']);
+	if(!empty($_POST['user']) && !empty($_POST['pass']) && !empty($_POST['e-mail']) && (time()-$time_login)<600){
 	$regis_email = $mysqli->real_escape_string($_POST['e-mail']);
 	$regis_user = $mysqli->real_escape_string($_POST['user']);
 	$regis_pass = $mysqli->real_escape_string($_POST['pass']);
@@ -111,7 +134,8 @@ function writeregister($mysqli){
 		to_location('register');
 		}
 	else {
-	$write = $mysqli->query("INSERT INTO `users` (`id`, `login`, `password`, `time`, `banned`, `email`) VALUES (NULL, '{$regis_user}', '".md5(md5($regis_pass.SALT))."', CURRENT_TIMESTAMP, '0', '{$regis_email}')");
+	$sail_pass=saling($regis_pass);
+	$write = $mysqli->query("INSERT INTO `users` (`id`, `login`, `password`, `time`, `banned`, `email`) VALUES (NULL, '{$regis_user}', '{$sail_pass}', CURRENT_TIMESTAMP, '0', '{$regis_email}')");
 	}
 	to_location();
 }
@@ -119,13 +143,15 @@ function writeregister($mysqli){
 //*************************login*************************************
 function login($mysqli){
 $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
+$time_login=crypt_hide($_POST['crypt']);
 if($host!=HOME && empty($_SESSION['user']) && $_GET['method']=='login' )
-	authform();	
-elseif(!empty($_POST['user']) || !empty($_POST['pass'])){
-	
+	authform();
+elseif(!empty($_POST['user']) && !empty($_POST['pass']) && (time()-$time_login)<600 ){
+		
 		$authuser = $mysqli->real_escape_string($_POST['user']);
 		$authpass = $mysqli->real_escape_string($_POST['pass']);
-		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='".md5(md5($authpass.SALT))."'");
+		$sail_pass=saling($authpass);
+		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='{$sail_pass}'");
 		if($res->num_rows>=1){
 		$_SESSION['user'] = $_POST['user'];
 		to_location();
