@@ -20,7 +20,6 @@ if(empty($_SESSION['user'])){
 		echo registration();
 	}
 	else {
-	var_dump($_SESSION);
 	echo authform();
 	echo regist_button();
 	}

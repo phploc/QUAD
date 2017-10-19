@@ -58,6 +58,7 @@ return <<<XOF
 <form action="/login" method="post">
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
+<input hidden type="text" name="token" value="Войти" />
 <input type="submit" name="submit" value="Войти" />
 </form>
 XOF;
@@ -104,7 +105,7 @@ function writeregister($mysqli){
 	$regis_pass = $mysqli->real_escape_string($_POST['pass']);
 	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$regis_user}'"); 								//проверка уникальности Логина
 	preg_match_all(/*'%[\.\-_A-Za-z0-9]+?@[\.\-A-Za-z0-9]+?[\ .A-Za-z0-9]{2,}%'*/'%.%',$regis_email, $match_email);	//регулярное выражение для email (ОТКЛЮЧЕНО) ($re = '/^[a-z0-9.]{1,30}@[a-z0-9]{1,30}\.[a-z]{2,10}$/mi';)							
-	preg_match_all/*'%[A-z\d]{3,}%'*/'%.%', $regis_user, $match_user);												//регулярное выражение для login  (ОТКЛЮЧЕНО)										
+	preg_match_all(/*'%[A-z\d]{3,}%'*/'%.%', $regis_user, $match_user);												//регулярное выражение для login  (ОТКЛЮЧЕНО)										
 	preg_match_all(/*'%[A-z\d]{6,}%'*/'%.%', $regis_pass, $match_pass);												//регулярное выражение для pass  (ОТКЛЮЧЕНО)
 	if($chek_login->num_rows>=1 || empty($match_email[0][0]) || empty($match_user[0][0])  || empty($match_pass[0][0])){
 		to_location('register');
