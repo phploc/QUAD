@@ -3,6 +3,7 @@ if(!defined('QUAD'))
 	err();
 define('HOME','php.loc');  //для проверки рефера
 define('SALT','quadropus');  //для засолки
+define('LIFETIME',600);		//время жизни формы
 date_default_timezone_set('Europe/Minsk');
 
 ini_set("session.name", 'servise');
@@ -31,9 +32,9 @@ function saling($sacred_string){
 	return md5(md5($sacred_string.SALT));
 }
 
-function crypt_hide($code='1'){				////функция шифровки/расшифровки
+function crypt_hide($code=true){				////функция шифровки/расшифровки
 	$id_sess=session_id();
-	if($code==='1'){
+	if($code===true){
 	return openssl_encrypt($id_sess.time().SALT,'RC4-40','gh');
 	}
 	else{
@@ -54,7 +55,7 @@ if($_SESSION['count']>5 || $_SERVER['REQUEST_TIME']<$_SESSION['bantime']){
 	err('на F5 можно и поменьше нажимать');
 }
 		
-if(isset($_SESSION['oldtime'])){
+if(isset($_SESSION['oldtime']) && $_SERVER['REQUEST_URI'] == $_SESSION['oldurl'] ){
 	$deltatime=$_SERVER['REQUEST_TIME']-$_SESSION['oldtime'];
 	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
 	if($deltatime<3){
@@ -63,6 +64,7 @@ if(isset($_SESSION['oldtime'])){
 }
 else{
 	$_SESSION['oldtime'] = $_SERVER['REQUEST_TIME'];
+	$_SESSION['oldurl'] = $_SERVER['REQUEST_URI'];
 }
 
 //*******************DBmysql********************************
@@ -85,9 +87,15 @@ XOF;
 	
 }
 function welcom(){
-	
+if($_SESSION['id_type']==0){
+echo <<<XOF
+<form action="/users_table">
+<input type="submit" name="users" value="Таблица пользователей" />
+</form>
+XOF;
+}
 	return <<<XOF
-Вечер в хату, {$_SESSION['user']} <br>
+Вечер в хату, {$_SESSION['user']}{$_SESSION['id_type']} <br>
 <form action="/logout">
 <input type="submit" name="logout" value="покинуть это" />
 </form>
@@ -99,7 +107,7 @@ XOF;
 
 function regist_button(){
 return <<<XOF
-<p><a href="register">Зарегистрироваться</a></p>
+<p><a href="/register">Зарегистрироваться</a></p>
 XOF;
 }
 
@@ -109,7 +117,7 @@ $CRYPT=crypt_hide();
 return <<<XOF
 Введите данные в форму регистрации
 <form action="/register" method="post">
-E-mail: <input required type="text" name="e-mail" /><br />
+Email: <input required type="text" name="email" /><br />
 Username: <input required type="text" name="user" /><br />
 Password: <input required type="password" name="pass" /><br />
 <input hidden type="text" name="crypt" value="{$CRYPT}" />
@@ -122,17 +130,20 @@ to_location();
 
 function writeregister($mysqli){
 	$time_login=crypt_hide($_POST['crypt']);
-	if(!empty($_POST['user']) && !empty($_POST['pass']) && !empty($_POST['e-mail']) && (time()-$time_login)<600){
-	$regis_email = $mysqli->real_escape_string($_POST['e-mail']);
+	if(!empty($_POST['user']) && !empty($_POST['pass']) && !empty($_POST['email']) && (time()-$time_login)<LIFETIME){
+	$regis_email = $mysqli->real_escape_string($_POST['email']);
 	$regis_user = $mysqli->real_escape_string($_POST['user']);
 	$regis_pass = $mysqli->real_escape_string($_POST['pass']);
-	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$regis_user}'"); 								//проверка уникальности Логина
 	preg_match_all(/*'%[\.\-_A-Za-z0-9]+?@[\.\-A-Za-z0-9]+?[\ .A-Za-z0-9]{2,}%'*/'%.%',$regis_email, $match_email);	//регулярное выражение для email (ОТКЛЮЧЕНО) ($re = '/^[a-z0-9.]{1,30}@[a-z0-9]{1,30}\.[a-z]{2,10}$/mi';)							
 	preg_match_all(/*'%[A-z\d]{3,}%'*/'%.%', $regis_user, $match_user);												//регулярное выражение для login  (ОТКЛЮЧЕНО)										
 	preg_match_all(/*'%[A-z\d]{6,}%'*/'%.%', $regis_pass, $match_pass);												//регулярное выражение для pass  (ОТКЛЮЧЕНО)
-	if($chek_login->num_rows>=1 || empty($match_email[0][0]) || empty($match_user[0][0])  || empty($match_pass[0][0])){
+	if( empty($match_email[0][0]) || empty($match_user[0][0])  || empty($match_pass[0][0])){
 		to_location('register');
 		}
+	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$regis_user}'"); 								//проверка уникальности Логина
+	if($chek_login->num_rows>=1){
+		to_location('register');
+	}
 	else {
 	$sail_pass=saling($regis_pass);
 	$write = $mysqli->query("INSERT INTO `users` (`id`, `login`, `password`, `time`, `banned`, `email`) VALUES (NULL, '{$regis_user}', '{$sail_pass}', CURRENT_TIMESTAMP, '0', '{$regis_email}')");
@@ -146,15 +157,18 @@ $host=parse_url($_SERVER['HTTP_REFERER'],PHP_URL_HOST);
 $time_login=crypt_hide($_POST['crypt']);
 if($host!=HOME && empty($_SESSION['user']) && $_GET['method']=='login' )
 	authform();
-elseif(!empty($_POST['user']) && !empty($_POST['pass']) && (time()-$time_login)<600 ){
+elseif(!empty($_POST['user']) && !empty($_POST['pass']) && (time()-$time_login)<LIFETIME ){
 		
 		$authuser = $mysqli->real_escape_string($_POST['user']);
 		$authpass = $mysqli->real_escape_string($_POST['pass']);
 		$sail_pass=saling($authpass);
 		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='{$sail_pass}'");
 		if($res->num_rows>=1){
-		$_SESSION['user'] = $_POST['user'];
+		$user_info=$res->fetch_assoc();
+		$_SESSION['user'] = $user_info['login'];
+		$_SESSION['id_type'] = $user_info['id_type'];
 		to_location();
+			
 		}
 		else
 		echo 'авторизация не пройдена';

@@ -1,6 +1,14 @@
 <?php
 define('QUAD',true);
 require_once 'params.php';
+
+echo <<<XOF
+<form action="/index">
+<input type="submit" name="logout" value="покинуть это странное место" />
+</form>
+XOF;
+
+
 $s=0;
 $v=0;
 $n=10000;

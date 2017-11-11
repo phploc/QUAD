@@ -10,7 +10,7 @@ elseif($_GET['method']==='register' && $_SERVER['REQUEST_METHOD']=='POST'){
 	writeregister($mysqli);
 }
 echo <<<XOF
-<form action="montyhalleng" method="POST">
+<form action="/montyhalleng" method="POST">
      <input name="myActionName" type="submit" value="{$_SESSION['count']}Посмотреть на парадокс{$_SESSION['bonus']}" />
 </form> 
 XOF;
