@@ -10,7 +10,7 @@ while($type_info=$types->fetch_assoc()){
 	*/
 	
 //$res = $mysqli->query("SELECT * FROM `users` WHERE 1");
-$res = $mysqli->query("SELECT users.id, users.login, users.email, type.value, banstatus.valueban FROM users, type, banstatus WHERE users.id_type = type.id_type AND banstatus.id_ban = users.banned");
+$res = $mysqli->query("SELECT users.id, users.login, users.email, type.value AS type, banstatus.valueban FROM users, type, banstatus WHERE users.id_type = type.id_type AND banstatus.id_ban = users.banned");
 
 $string="";
 while($user_info=$res->fetch_assoc()){
@@ -19,7 +19,7 @@ $string.="
 <tr>
     <th>{$user_info['id']}</th>
     <td>{$user_info['login']}</td>
-    <td>{$user_info['value']}</td>
+    <td>{$user_info['type']}</td>
     <td>{$user_info['email']}</td>
 	<td>{$user_info['valueban']}</td>
 </tr>";
