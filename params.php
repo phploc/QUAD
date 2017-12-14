@@ -7,11 +7,13 @@ define('LIFETIME',600);		//время жизни формы
 
 
 $RES = array (
-    '?res=1' => 'Данный логин уже занят. Придумайте другой.',
-    '?res=2' => 'Пароли в формах не совпадают.',
-    '?res=3' => 'Письмо успешно отправлено.',
-    '?res=4' => 'Ошибка при отправки письма.',
-    '?res=5' => 'Пароль успешно сменён.'
+    'result=1' => 'Данный логин уже занят. Придумайте другой.',
+    'result=2' => 'Пароли в формах не совпадают.',
+    'result=3' => 'Письмо успешно отправлено.',
+    'result=4' => 'Ошибка при отправки письма.',
+    'result=5' => 'Пароль успешно сменён.',
+    'result=6' => 'Пароль не соответствует правилам. (Минимум 6 цифр или латинских символов)',
+    'result=7' => 'Данного логина не существует'
 );
 
 
@@ -50,11 +52,11 @@ function send_mail($recipient,$mail_theme,$mail_body){						//функция о�
 	$headers .= "Content-type: text/html; charset=utf-8\r\n"; // кодировка письма
 	$headers .= "From: php.loc <trotzky.viktor@yandex.ru>\r\n"; // от кого письмо
 	$result =  $mailSMTP->send($recipient, $mail_theme, $mail_body, $headers); // отправляем письмо
-
+	$_POST['result']=$result;
 	if($result === true){
 		return "3";
 	}else{
-		return "4";
+		return $result;
 	}
 }
 
@@ -117,7 +119,7 @@ XOF;
 /*
 return <<<XOF
 
-<script type="text/javascript">
+<script>
   function getValue(){
     var text = document.getElementById("pass").value;
 	text+='dshfjkl';
@@ -169,25 +171,27 @@ XOF;
 }
 function forgot_pass_letter($mysqli,$login){
 	
-	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$login}'"); 								//проверка уникальности Логина
-	if($chek_login->num_rows>=1){
-		$login_info=$chek_login->fetch_assoc();
-		$id=$login_info['id'];
-		$time=time()+86400;
-		$hash=openssl_encrypt(openssl_encrypt($time.$id,'RC4-40','gh'),'RC4-40','gh');
-		$url='http://'.HOME."/index.php?superstring={$hash}";
-		$send_res = send_mail($login_info['email'],'Восстановление пароля',"Для восстановления пароля перейдите по этой ссылке: {$url}");
-		to_location('/?res='.$send_res);
-		
+	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$login}' LIMIT 1"); 								//проверка уникальности Логина
+	if($chek_login->num_rows<1){
+		to_location('/?result=7');
 	}
+	$login_info=$chek_login->fetch_assoc();
+	$id=$login_info['id'];
+	$time=time()+86400;
+	$hash=openssl_encrypt(openssl_encrypt($time.$id,'RC4-40','gh'),'RC4-40','gh');
+	$url='http://'.HOME."/index.php?superstring={$hash}";
+	$send_res = send_mail($login_info['email'],'Восстановление пароля',"Для восстановления пароля перейдите по этой ссылке: {$url}");
+	to_location('/?result='.$send_res);
+		
+	
 }
 function reset_pass($string){
 	$b=openssl_decrypt(openssl_decrypt($string,'RC4-40','gh'),'RC4-40','gh');
 	$time=substr($b,0,10);
-	var_dump($time);
+	
 	if($time>time()){
 	$id=substr($b,10);
-	var_dump($id);
+	
 	return <<<XOF
 	Введите ваш новый пароль
 	<form action="/writepass" method="post">
@@ -201,14 +205,18 @@ XOF;
 	to_location();
 }
 function write_pass($mysqli){
-	if($_POST['pass'] == $_POST['rep_pass']){
+	if($_POST['pass'] !== $_POST['rep_pass']){
+		to_location('?result=2');		//ОШИБКА Пароли не совпадают
+	}
 	$id=$_POST['crypt'];
 	$new_pass = $mysqli->real_escape_string($_POST['pass']);
+	preg_match(/*'%^[A-z\d]{6,}$%'*/'%.%', $new_pass, $match_pass);
+	if(mb_strlen($new_pass) == mb_strlen($match_pass[0]) ){
+		to_location('?result=6');
+	}
 	$sail_pass=saling($new_pass);
 	$write_pass = $mysqli->query("UPDATE `users` SET `password` = '{$sail_pass}' WHERE `users`.`id` = {$id}");
-	to_location('?res=5');
-	}
-to_location('?res=2');		//ОШИБКА Пароли не совпадают
+	to_location('?result=5');
 }
 //*************************register*********************************
 
@@ -238,7 +246,7 @@ to_location();
 
 function writeregister($mysqli){
 	$time_login=crypt_hide($_POST['crypt']);
-	if(!empty($_POST['user']) && !empty($_POST['pass']) && !empty($_POST['email']) && (time()-$time_login)<LIFETIME && $_POST['pass'] == $_POST['rep_pass'] ){
+	if(!empty($_POST['user']) && !empty($_POST['pass']) && !empty($_POST['email']) && (time()-$time_login)<LIFETIME && $_POST['pass'] === $_POST['rep_pass'] ){
 	$regis_email = $mysqli->real_escape_string($_POST['email']);
 	$regis_user = $mysqli->real_escape_string($_POST['user']);
 	$regis_pass = $mysqli->real_escape_string($_POST['pass']);
@@ -248,18 +256,16 @@ function writeregister($mysqli){
 	if( empty($match_email[0]) || empty($match_user[0])  || empty($match_pass[0])){
 		to_location('register');
 		}
-	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$regis_user}'"); 								//проверка уникальности Логина
+	$chek_login = $mysqli->query("SELECT * FROM `users` WHERE login='{$regis_user}' LIMIT 1"); 								//проверка уникальности Логина
 	if($chek_login->num_rows>=1){
-		to_location('register?res=1');    //ОШИБКА логин занят
+		to_location('register?result=1');    //ОШИБКА логин занят
 	}
-	else {
 	$sail_pass=saling($regis_pass);
 	$write = $mysqli->query("INSERT INTO `users` (`id`, `login`, `password`, `time`, `banned`, `email`) VALUES (NULL, '{$regis_user}', '{$sail_pass}', CURRENT_TIMESTAMP, '1', '{$regis_email}')");
-	}
 	$send_res = send_mail($regis_email,'Регистрация','Поздравляем вас с успешной регистрацией');
-	to_location('/?res='.$send_res);
+	to_location('/?result='.$send_res);
 }
-to_location('register?res=2');		//ОШИБКА Пароли не совпадают
+to_location('register?result=2');		//ОШИБКА Пароли не совпадают
 }
 //*************************login*************************************
 function login($mysqli){
@@ -272,7 +278,7 @@ elseif(!empty($_POST['user']) && !empty($_POST['pass']) && (time()-$time_login)<
 		$authuser = $mysqli->real_escape_string($_POST['user']);
 		$authpass = $mysqli->real_escape_string($_POST['pass']);
 		$sail_pass=saling($authpass);
-		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='{$sail_pass}'");
+		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='{$sail_pass}' LIMIT 1");
 		if($res->num_rows>=1){
 		$user_info=$res->fetch_assoc();
 		$_SESSION['user'] = $user_info['login'];

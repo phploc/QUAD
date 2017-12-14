@@ -24,14 +24,13 @@ echo <<<XOF
 </form>
 XOF;
 
-$tt='pp';
-var_dump($tt);
-$vv=saling($tt);
-var_dump($vv);
 if(empty($_SESSION['user'])){
 	
-	$ok=strstr($_SERVER['REQUEST_URI'],'?res=');
+	$ok=strstr($_SERVER['REQUEST_URI'],'result=');
 		if($ok){
+			if(empty($RES[$ok])){
+			echo rawurldecode($ok);	
+			}
 			echo $RES[$ok],'<br>';
 		}
 		
