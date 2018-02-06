@@ -109,10 +109,10 @@ $CRYPT=crypt_hide();
 return <<<XOF
 
 <form action="/login" method="post">
-Username: <input required type="text" name="user" /><br />
-Password: <input required id='pass' type="password" name="pass" /><br />
-<input hidden type="text" name="crypt" value="{$CRYPT}" />
-<input type="submit" name="submit" value="Войти" />
+Username: <input required type="text" name="user" ><br />
+Password: <input required id='pass' type="password" name="pass" ><br />
+<input hidden type="text" name="crypt" value="{$CRYPT}" >
+<input type="submit" name="submit" value="Войти" >
 </form>
 XOF;
 
@@ -141,18 +141,92 @@ function welcom(){
 if($_SESSION['id_type']==7){
 echo <<<XOF
 <form action="/users_table">
-<input type="submit" name="users" value="Таблица пользователей" />
+<input type="submit" name="users" value="Таблица пользователей" >
 </form>
+
+
+<br>
 XOF;
 }
 	return <<<XOF
+	<br>
+	<form action="/personalmes">
+	<input type="submit" name="message" value="Личные сообщения" >
+	</form>
+	<br>
 Вечер в хату, {$_SESSION['user']}{$_SESSION['id_type']} <br>
 <form action="/logout">
-<input type="submit" name="logout" value="покинуть это" />
+<input type="submit" name="logout" value="покинуть это" >
 </form>
 XOF;
 }
 
+//*************************messages*********************************
+function personal_mes($mysqli){
+	$search_letter = $mysqli->query("SELECT private_mesages.send_date, private_mesages.message_body, tab_send.login AS send, tab_recip.login AS recip FROM `private_mesages` INNER JOIN users AS tab_send ON private_mesages.id_sender = tab_send.id INNER JOIN users AS tab_recip  ON private_mesages.id_recip = tab_recip.id WHERE private_mesages.id_sender = {$_SESSION["id"]} OR private_mesages.id_recip = {$_SESSION["id"]} ORDER BY send_date LIMIT 10"); 
+	while ($letters=$search_letter->fetch_assoc()) {
+		if($_SESSION['user'] == $letters['send']){
+			$write_to = $letters['recip'];
+		} else{
+			$write_to = $letters['send'];
+		}
+        echo <<<XOF
+			<br>Отправитель: {$letters["send"]}
+			<br>Получатель: {$letters["recip"]}
+			<br>Дата: {$letters["send_date"]}
+			<br>Сообщение: {$letters["message_body"]}
+			<br>
+			<form action='/sendmes' method='POST' >
+			<input type='submit' name='users' value='Написать собеседнику' >
+			<input hidden type='text' name='username' value='{$write_to}' >
+			</form>
+XOF;
+    }
+	
+	
+}
+
+function send_mes( $recipient=''){
+	
+	if(!empty($_SESSION['user'])){
+	$CRYPT=crypt_hide();
+	return <<<XOF
+	<form action="/sendmes" method="post">
+	Username: <br><input required type="text" name="user" value="{$recipient}" ><br>
+	Message: <br><textarea cols="30" rows="5"  required  type="text" name="message" >test message </textarea><br>
+	<input hidden type="text" name="sender" value="{$_SESSION['user']}" > <br>
+	<input hidden type="text" name="crypt" value="{$CRYPT}" > <br>
+	<input type="submit" name="submit" value="Отправить" >
+	</form>
+	
+XOF;
+	
+}
+to_location();
+}
+
+function write_mes($mysqli){
+	
+	$time_login=crypt_hide($_POST['crypt']);
+	if(!empty($_POST['user']) && !empty($_POST['message']) && !empty($_POST['sender']) && (time()-$time_login)<LIFETIME){
+		$message_to = $mysqli->real_escape_string($_POST['user']);
+		$message = $mysqli->real_escape_string($_POST['message']);
+		$message_from = $mysqli->real_escape_string($_POST['sender']);
+		$get_id = $mysqli->query("SELECT users.id, users.login FROM users WHERE users.login='{$message_to}' OR users.login='{$message_from}' LIMIT 2");
+		
+		while($rows = $get_id->fetch_assoc()){
+			if($message_to == $rows['login']){
+				$message_to = $mysqli->real_escape_string($rows['id']);
+			} elseif($message_from == $rows['login']){
+				$message_from = $mysqli->real_escape_string($rows['id']);
+			} else{
+				to_location();
+			};
+		};
+		$send_mes = $mysqli->query("INSERT INTO `private_mesages` (`id_message`, `id_sender`, `id_recip`, `send_date`, `message_body`) VALUES (NULL, '{$message_from}', '{$message_to}', CURRENT_TIMESTAMP, '{$message}')");
+	};
+	to_location();
+}
 
 //*************************forgot_pass*********************************
 function forgot_pass_button(){
@@ -164,8 +238,8 @@ function forgot_pass(){
 	return <<<XOF
 Введите ваш ник для восстановления пароля
 <form action="/forgot" method="post">
-Username: <input required type="text" name="user" /><br />
-<input type="submit" name="passsubmit" value="Сменить пароль" />
+Username: <input required type="text" name="user" ><br />
+<input type="submit" name="passsubmit" value="Сменить пароль" >
 </form>
 XOF;
 }
@@ -195,10 +269,10 @@ function reset_pass($string){
 	return <<<XOF
 	Введите ваш новый пароль
 	<form action="/writepass" method="post">
-	Password: <input required type="password" name="pass" /><br />
-	Repeat Password: <input required type="password" name="rep_pass" /><br />
-	<input hidden type="text" name="crypt" value="{$id}" />
-	<input type="submit" name="passsubmit" value="Сменить пароль" />
+	Password: <input required type="password" name="pass" ><br />
+	Repeat Password: <input required type="password" name="rep_pass" ><br />
+	<input hidden type="text" name="crypt" value="{$id}" >
+	<input type="submit" name="passsubmit" value="Сменить пароль" >
 	</form>
 XOF;
 	}
@@ -232,12 +306,12 @@ $CRYPT=crypt_hide();
 return <<<XOF
 Введите данные в форму регистрации
 <form action="/register" method="post">
-Email: <input required type="text" name="email" /><br />
-Username: <input required type="text" name="user" /><br />
-Password: <input required type="password" name="pass" /><br />
-Repeat Password: <input required type="password" name="rep_pass" /><br />
-<input hidden type="text" name="crypt" value="{$CRYPT}" />
-<input type="submit" name="regsubmit" value="Зарегистрироваться" />
+Email: <input required type="text" name="email" ><br />
+Username: <input required type="text" name="user" ><br />
+Password: <input required type="password" name="pass" ><br />
+Repeat Password: <input required type="password" name="rep_pass" ><br />
+<input hidden type="text" name="crypt" value="{$CRYPT}" >
+<input type="submit" name="regsubmit" value="Зарегистрироваться" >
 </form>
 XOF;
 }
@@ -281,6 +355,7 @@ elseif(!empty($_POST['user']) && !empty($_POST['pass']) && (time()-$time_login)<
 		$res = $mysqli->query("SELECT * FROM `users` WHERE login='{$authuser}' AND password='{$sail_pass}' LIMIT 1");
 		if($res->num_rows>=1){
 		$user_info=$res->fetch_assoc();
+		$_SESSION['id'] = $user_info['id'];
 		$_SESSION['user'] = $user_info['login'];
 		$_SESSION['id_type'] = $user_info['id_type'];
 		to_location();

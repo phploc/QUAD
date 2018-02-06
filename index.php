@@ -15,13 +15,22 @@ elseif($_GET['method']==='forgot' && $_SERVER['REQUEST_METHOD']=='POST'){
 elseif($_GET['method']==='writepass' && $_SERVER['REQUEST_METHOD']=='POST'){
 	echo write_pass($mysqli);
 }
+elseif($_GET['method']==='personalmes'){
+	echo personal_mes($mysqli);
+}
+elseif($_GET['method']==='sendmes'){
+	if(!empty($_POST["user"])){
+		echo write_mes($mysqli);
+	}
+	else{
+		echo send_mes($_POST["username"]);
+	}
+	
+}
 echo <<<XOF
 <form action="/montyhalleng" method="POST">
-     <input name="myActionName" type="submit" value="{$_SESSION['count']}Посмотреть на парадокс{$_SESSION['bonus']}" />
+     <input name="myActionName" type="submit" value="{$_SESSION['count']}Посмотреть на парадокс{$_SESSION['bonus']}" >
 </form> 
-<form action="/mail" method="POST">
-     <input name="myActionName" type="submit" value="E-mail" />
-</form>
 XOF;
 
 if(empty($_SESSION['user'])){
@@ -50,6 +59,15 @@ if(empty($_SESSION['user'])){
 	}
 }
 else{
+	echo <<<XOF
+		
+		<form action='/sendmes' method='POST' >
+			<input type='submit' name='users' value='Написать собеседнику' >
+			<input hidden type='text' name='username'  >
+			</form>
+	
+XOF;
+
 	echo welcom();
 }
 

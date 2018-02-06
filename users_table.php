@@ -22,6 +22,12 @@ $string.="
     <td>{$user_info['type']}</td>
     <td>{$user_info['email']}</td>
 	<td>{$user_info['banned']}</td>
+	<td>
+	<form action='/sendmes' method='POST' >
+	<input type='submit' name='users' value='Написать' >
+	<input hidden type='text' name='username' value={$user_info['login']} >
+	</form>
+	</td>
 </tr>";
 
 }
@@ -53,6 +59,7 @@ echo <<<XOF
     <th>Тип пользователя</th>
 	<th>Email пользователя</th>
 	<th>Бан статус</th>
+	<th>Общение</th>
    </tr>
    {$string}
  </body>
@@ -61,6 +68,6 @@ XOF;
 
 echo <<<XOF
 <form action="/index">
-<input type="submit" name="logout" value="покинуть это странное место" />
+<input type="submit" name="logout" value="Покинуть это странное место" />
 </form>
 XOF;

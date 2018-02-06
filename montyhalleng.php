@@ -51,4 +51,3 @@ $winchr[1]=$winch;
 $winchr[2]=' times|';
 $b=file_put_contents("monty.txt",$winr,FILE_APPEND);
 $b2=file_put_contents("monty.txt",$winchr,FILE_APPEND);
-echo $b,"	",$b2;
